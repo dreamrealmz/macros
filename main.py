@@ -177,6 +177,8 @@ class KeyboardListener:
             'b': '"b"', 'N': '"N"', 'n': '"n"', 'M': '"M"', 'm': '"m"', ',': '","', '.': '"."', '/': '"/"',
             'shift_r': 'Key.shift_r', 'ctrl_l': 'Key.ctrl_l', 'cmd': 'Key.cmd', 'alt_l': 'Key.alt_l',
             'space': 'Key.space', 'alt_gr': 'Key.alt_gr', 'cmd_r': 'Key.cmd_r', 'ctrl_r': 'Key.ctrl_r',
+            '!': '"1"', '@': '"2"', '#': '"3"', '$': '"4"', '%': '"5"', '^': '"6"', '&': '"7"', '*': '"8"', '(': '"9"',
+            ')': '"0"', '_': '"-"', '+': '"="',
         }
         self.keyboard_mapping = keyboard_mapping
         self.macros_mapping = {}
@@ -222,7 +224,7 @@ class KeyboardListener:
             char = key
         command = f'self.keyboard.press({self.button_comparison.get(char)});'
         release_command = f'self.keyboard.press({self.button_comparison.get(char)});'
-        if key != Key.f8 and command not in self.written_script\
+        if key != Key.f8 and command not in self.written_script \
                 or self.written_script.count(command) <= self.written_script.count(release_command):
             self.written_script += f'self.keyboard.press({self.button_comparison.get(char)});'
 
