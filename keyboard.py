@@ -80,8 +80,6 @@ class KeyboardListener:
                 or self.written_script.count(command) <= self.written_script.count(release_command)
         ):
             self.written_script += f'self.keyboard.press({button});'
-        else:
-            print('hui')
 
     def write_release(self, key):
         if isinstance(key, Key):
