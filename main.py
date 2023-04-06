@@ -1,13 +1,20 @@
+import os
 import sys
+import pickle
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QDialog, \
-    QVBoxLayout, QFileDialog, QMessageBox
+    QVBoxLayout, QFileDialog, QMessageBox, QInputDialog
 from pynput.keyboard import Key, Listener, Controller
 from pynput.keyboard._win32 import KeyCode  # noqa
 from multiprocessing import Process
+from cryptography.fernet import Fernet
+
+key = Fernet.generate_key()
+fernet = Fernet(key)
 
 
 class ScriptDialog(QDialog):
+
     def __init__(self, button_text, script_address, parent=None):
         super().__init__(parent)
         self.setWindowTitle(f'Скрипт для {button_text}: {script_address}')
@@ -77,6 +84,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.fernet = self.get_secret_key()
         self.setFixedSize(1200, 400)
 
         keyboard_label = QLabel(self)
@@ -111,6 +119,26 @@ class MainWindow(QMainWindow):
         button.setFixedSize(180, 60)
         button.clicked.connect(self.start_program)
         self.keyboard_layout.addWidget(button)
+
+    def get_secret_key(self):
+        if os.path.exists('secret_key.pkl'):
+            with open('secret_key.pkl', 'rb') as f:
+                secret_key = pickle.load(f).get('secret_key')
+        else:
+            self.ask_for_activation_key()
+            with open('secret_key.pkl', 'wb') as f:
+                secret_key = Fernet.generate_key()
+                pickle.dump(
+                    {'secret_key': secret_key},
+                    f
+                )
+        return Fernet(secret_key)
+
+    def ask_for_activation_key(self):
+        insert, _ = QInputDialog.getText(self, 'Активация программы', 'Введите ключ:')
+        if not str(insert).isdigit():
+            QMessageBox.information(self, "Внимание", "ключ не действителен.")
+            sys.exit()
 
     def start_program(self):
         buttons = self.get_buttons_with_macros()
@@ -190,6 +218,7 @@ class KeyboardListener:
             exec(script)
         except Exception as exc:
             pass
+        yield
 
     def on_press(self, key):
         if isinstance(key, Key):

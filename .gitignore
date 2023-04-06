@@ -10,4 +10,5 @@ ENV/
 .idea
 *.xml
 *.txt
+*.pkl
 !requirements.txt
