@@ -121,12 +121,12 @@ class MainWindow(QMainWindow):
         self.keyboard_layout.addWidget(button)
 
     def get_secret_key(self):
-        if os.path.exists('secret_key.pkl'):
-            with open('secret_key.pkl', 'rb') as f:
+        if os.path.exists('config.pkl'):
+            with open('config.pkl', 'rb') as f:
                 secret_key = pickle.load(f).get('secret_key')
         else:
             self.ask_for_activation_key()
-            with open('secret_key.pkl', 'wb') as f:
+            with open('config.pkl', 'wb') as f:
                 secret_key = Fernet.generate_key()
                 pickle.dump(
                     {'secret_key': secret_key},
