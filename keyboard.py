@@ -5,7 +5,6 @@ from multiprocessing import Process
 
 class KeyboardListener:
     def __init__(self, binding_key='', keyboard_mapping=None):
-        print(keyboard_mapping)
 
         self.key_class_buttons = {
             'esc': 'Key.esc', 'f1': 'Key.f1', 'f2': 'Key.f2', 'f3': 'Key.f3', 'f4': 'Key.f4', 'f5': 'Key.f5',
@@ -34,7 +33,8 @@ class KeyboardListener:
         self.written_script = ''
         binding_key = self.button_comparison.get(binding_key)
         if binding_key:
-            self.binding_key = [binding_key.lower(), binding_key.upper(), binding_key.capitalize()]
+            self.binding_key = [binding_key.lower(), binding_key.upper(), binding_key.capitalize()] if isinstance(
+                binding_key, str) else [binding_key]
         else:
             self.binding_key = None
 
@@ -77,7 +77,7 @@ class KeyboardListener:
         command = f'self.keyboard.press({self.button_comparison.get(char)});'
         release_command = f'self.keyboard.press({self.button_comparison.get(char)});'
         button = self.button_comparison.get(char)
-        buttons = [button.lower(), button.upper(), button.capitalize()]
+        buttons = [button.lower(), button.upper(), button.capitalize()] if isinstance(button, str) else [button]
         if key != Key.f8 and buttons != self.binding_key and (
                 command not in self.written_script
                 or self.written_script.count(command) <= self.written_script.count(release_command)
@@ -92,7 +92,8 @@ class KeyboardListener:
         else:
             char = key
         button = self.button_comparison.get(char)
-        if key != Key.f8 and button == self.binding_key:
+        buttons = [button.lower(), button.upper(), button.capitalize()] if isinstance(button, str) else [button]
+        if key != Key.f8 and buttons != self.binding_key:
             self.written_script += f'self.keyboard.release({button});'
         return key != Key.f8
 

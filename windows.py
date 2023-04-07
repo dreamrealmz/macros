@@ -123,11 +123,6 @@ class MainWindow(QMainWindow):
         Process(target=listener.listen_keyboard()).start()
         self.show()
 
-    def read_script(self, button):
-        with open(f'{button.script}', 'r') as file:
-            script = file.read()
-            return script
-
     def on_key_pressed(self):
         button_text = self.sender().text()
         dialog = ScriptDialog(button_text, self.fernet)
