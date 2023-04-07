@@ -65,14 +65,16 @@ class MainWindow(QMainWindow):
     def load_config(self):
         with open('config.pkl', 'rb') as f:
             data = pickle.load(f)
-        options = data.get('configs', {}).keys()
-        if options:
-            insert, _ = QInputDialog.getText(self, 'Выберите конфигурацию', 'Введите название:')
-            buttons = data['configs'].get(insert)
-            buttons_dict = self.get_all_buttons_dict()
-            for key, value in buttons.items():
-                buttons_dict.get(key).script = value
-                buttons_dict.get(key).setStyleSheet('background-color: blue')
+        configs = data.get('configs', {})
+        if configs:
+            item, ok = QInputDialog.getItem(self, 'Выберите скрипт', 'Выберите скрипт из списка:', configs.keys(), 0,
+                                            False)
+            if ok and item:
+                buttons = data['configs'].get(item)
+                buttons_dict = self.get_all_buttons_dict()
+                for key, value in buttons.items():
+                    buttons_dict.get(key).script = value
+                    buttons_dict.get(key).setStyleSheet('background-color: blue')
 
     def create_config(self):
         insert, _ = QInputDialog.getText(self, 'Сохранение конфигурации', 'Введите название:')
@@ -114,10 +116,12 @@ class MainWindow(QMainWindow):
         QMessageBox.information(
             self,
             "Внимание",
-            "ПОСЛЕ клика кнопки 'OK' будут запущены макросы. для остановки макросов нажмите f8"
+            "ПОСЛЕ клика кнопки 'OK' будут запущены макросы, а управление передано клавиатуре. для остановки нажмите f8"
         )
         listener = KeyboardListener(keyboard_mapping=buttons)
+        self.hide()
         Process(target=listener.listen_keyboard()).start()
+        self.show()
 
     def read_script(self, button):
         with open(f'{button.script}', 'r') as file:
