@@ -39,6 +39,7 @@ class KeyboardListener:
             self.binding_key = None
 
     def execute_script(self, script):
+        import time # noqa
         try:
             exec(script)
         except Exception as exc:
@@ -82,7 +83,7 @@ class KeyboardListener:
                 command not in self.written_script
                 or self.written_script.count(command) <= self.written_script.count(release_command)
         ):
-            self.written_script += f'self.keyboard.press({button});'
+            self.written_script += f'self.keyboard.press({button});time.sleep(0.1);'
 
     def write_release(self, key):
         if isinstance(key, Key):
@@ -94,7 +95,7 @@ class KeyboardListener:
         button = self.button_comparison.get(char)
         buttons = [button.lower(), button.upper(), button.capitalize()] if isinstance(button, str) else [button]
         if key != Key.f8 and buttons != self.binding_key:
-            self.written_script += f'self.keyboard.release({button});'
+            self.written_script += f'self.keyboard.release({button});time.sleep(0.1);'
         return key != Key.f8
 
     def write_script(self):
