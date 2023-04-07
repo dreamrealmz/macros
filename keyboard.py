@@ -5,6 +5,7 @@ from multiprocessing import Process
 
 class KeyboardListener:
     def __init__(self, binding_key='', keyboard_mapping=None):
+        print(keyboard_mapping)
 
         self.key_class_buttons = {
             'esc': 'Key.esc', 'f1': 'Key.f1', 'f2': 'Key.f2', 'f3': 'Key.f3', 'f4': 'Key.f4', 'f5': 'Key.f5',
@@ -32,7 +33,10 @@ class KeyboardListener:
         self.keyboard = Controller()
         self.written_script = ''
         binding_key = self.button_comparison.get(binding_key)
-        self.binding_key = [binding_key.lower(), binding_key.upper(), binding_key.capitalize()]
+        if binding_key:
+            self.binding_key = [binding_key.lower(), binding_key.upper(), binding_key.capitalize()]
+        else:
+            self.binding_key = None
 
     def execute_script(self, script):
         try:
@@ -54,10 +58,9 @@ class KeyboardListener:
 
     def listen_keyboard(self):
         for item in self.keyboard_mapping:
-            with open(f'{item.script_address}', 'r') as script:
-                script_text = script.read()
-            self.macros_mapping[item.text()] = script_text
-            self.macros_mapping[item.text().lower()] = script_text
+            self.macros_mapping[item.text()] = item.script
+            self.macros_mapping[item.text().lower()] = item.script
+            self.macros_mapping[item.text().upper()] = item.script
 
         with Listener(
                 on_press=self.on_press,

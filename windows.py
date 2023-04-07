@@ -111,8 +111,6 @@ class MainWindow(QMainWindow):
 
     def start_program(self):
         buttons = self.get_buttons_with_macros()
-        for button in buttons:
-            button.macros_script = self.read_script(button)
         QMessageBox.information(
             self,
             "Внимание",
