@@ -50,6 +50,45 @@ class MainWindow(QMainWindow):
         button.clicked.connect(self.start_program)
         self.keyboard_layout.addWidget(button)
 
+        load_config_button = QPushButton('Загрузить конфигурацию', self)
+        load_config_button.setStyleSheet('background-color: orange')
+        load_config_button.setFixedSize(180, 60)
+        load_config_button.clicked.connect(self.load_config)
+        self.keyboard_layout.addWidget(load_config_button)
+
+        create_config_button = QPushButton('Сохранить конфигурацию', self)
+        create_config_button.setStyleSheet('background-color: yellow')
+        create_config_button.setFixedSize(180, 60)
+        create_config_button.clicked.connect(self.create_config)
+        self.keyboard_layout.addWidget(create_config_button)
+
+    def load_config(self):
+        with open('config.pkl', 'rb') as f:
+            data = pickle.load(f)
+        options = data.get('configs', {}).keys()
+        if options:
+            insert, _ = QInputDialog.getText(self, 'Выберите конфигурацию', 'Введите название:')
+            buttons = data['configs'].get(insert)
+            buttons_dict = self.get_all_buttons_dict()
+            for key, value in buttons.items():
+                buttons_dict.get(key).script_address = value
+                buttons_dict.get(key).setStyleSheet('background-color: blue')
+
+    def create_config(self):
+        insert, _ = QInputDialog.getText(self, 'Сохранение конфигурации', 'Введите название:')
+        buttons = self.get_buttons_with_macros()
+        buttons_scripts = {}
+        for button in buttons:
+            buttons_scripts[button.text()] = button.script_address
+        with open('config.pkl', 'rb') as f:
+            data = pickle.load(f)
+
+        configs = data.get('configs', {})
+        configs[insert] = buttons_scripts
+        data['configs'] = configs
+        with open('config.pkl', 'wb') as f:
+            pickle.dump(data, f)
+
     def get_secret_key(self):
         if os.path.exists('config.pkl'):
             with open('config.pkl', 'rb') as f:
@@ -102,6 +141,15 @@ class MainWindow(QMainWindow):
             else:
                 self.sender().setStyleSheet('background-color: gray')
             self.sender().script_address = file_name
+
+    def get_all_buttons_dict(self):
+        buttons = {}
+        for row in range(self.keyboard_layout.rowCount()):
+            for col in range(self.keyboard_layout.columnCount()):
+                item = self.keyboard_layout.itemAtPosition(row, col)
+                if item is not None and isinstance(item.widget(), QPushButton):
+                    buttons[item.widget().text()] = item.widget()
+        return buttons
 
     def get_buttons_with_macros(self):
         buttons = []
