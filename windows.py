@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
             buttons = data['configs'].get(insert)
             buttons_dict = self.get_all_buttons_dict()
             for key, value in buttons.items():
-                buttons_dict.get(key).script_address = value
+                buttons_dict.get(key).script = value
                 buttons_dict.get(key).setStyleSheet('background-color: blue')
 
     def create_config(self):
@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
         buttons = self.get_buttons_with_macros()
         buttons_scripts = {}
         for button in buttons:
-            buttons_scripts[button.text()] = button.script_address
+            buttons_scripts[button.text()] = button.script
         with open('config.pkl', 'rb') as f:
             data = pickle.load(f)
 
@@ -122,25 +122,21 @@ class MainWindow(QMainWindow):
         Process(target=listener.listen_keyboard()).start()
 
     def read_script(self, button):
-        with open(f'{button.script_address}', 'r') as file:
+        with open(f'{button.script}', 'r') as file:
             script = file.read()
             return script
 
     def on_key_pressed(self):
-        try:
-            script_address = self.sender().script_address
-        except AttributeError:
-            script_address = ''
         button_text = self.sender().text()
-        dialog = ScriptDialog(button_text, script_address, self.fernet)
+        dialog = ScriptDialog(button_text, self.fernet)
         result = dialog.exec_()
         if result == QDialog.Accepted:
-            file_name = dialog.get_file_name()
-            if file_name:
+            script = dialog.get_script()
+            if script:
                 self.sender().setStyleSheet('background-color: blue')
             else:
                 self.sender().setStyleSheet('background-color: gray')
-            self.sender().script_address = file_name
+            self.sender().script = script
 
     def get_all_buttons_dict(self):
         buttons = {}
@@ -158,7 +154,7 @@ class MainWindow(QMainWindow):
                 item = self.keyboard_layout.itemAtPosition(row, col)
                 if item is not None and isinstance(item.widget(), QPushButton):
                     try:
-                        if item.widget().script_address:
+                        if item.widget().script:
                             buttons.append(item.widget())
                     except Exception as exc:
                         pass

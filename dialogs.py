@@ -1,13 +1,14 @@
-from PySide6.QtWidgets import QLabel, QPushButton, QDialog, QVBoxLayout, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QLabel, QPushButton, QDialog, QVBoxLayout, QFileDialog, QMessageBox, QInputDialog
 from keyboard import KeyboardListener
+import pickle
 
 
 class ScriptDialog(QDialog):
 
-    def __init__(self, button_text, script_address, fernet, parent=None):
+    def __init__(self, button_text, fernet, parent=None):
         super().__init__(parent)
         self.fernet = fernet
-        self.setWindowTitle(f'Скрипт для {button_text}: {script_address}')
+        self.setWindowTitle(f'Скрипт для {button_text}')
         self.setFixedSize(360, 140)
 
         create_button = QPushButton("Создать скрипт", self)
@@ -29,22 +30,30 @@ class ScriptDialog(QDialog):
         self.setLayout(layout)
 
         self.button_text = button_text
-        self.file_name = None
+        self.script = None
 
     def cancel_script(self):
         QMessageBox.information(self, "Внимание", "бинд с кнопки будет убран")
-        self.file_name = None
+        self.script = None
         self.accept()
-        self.file_label.setText(f"Выбран файл: {self.file_name}")
+        self.file_label.setText(f"Выбран скрипт: {self.script}")
 
     def open_script(self):
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        file_name, _ = QFileDialog.getOpenFileName(self, "Выбрать скрипт", "", "Text Files (*.txt)", options=options)
-        if file_name:
-            self.file_name = file_name
+        data = self.read_config()
+        scripts = data.get('scripts', {})
+        if scripts:
+            insert, _ = QInputDialog.getText(self, 'Выберите скрипт', 'Введите название:')
+            self.script = scripts.get(insert)
             self.accept()
-            self.file_label.setText(f"Выбран файл: {self.file_name}")
+            self.file_label.setText(f"Выбран скрипт: {self.script}")
+
+
+        else:
+            QMessageBox.information(
+                self,
+                "Внимание",
+                "Вы еще не писали скриптов, чтобы их использовать"
+            )
 
     def create_script(self):
         QMessageBox.information(
@@ -55,16 +64,31 @@ class ScriptDialog(QDialog):
         )
         listener = KeyboardListener(binding_key=self.button_text)
         script_text = listener.write_script()
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        file_name, _ = QFileDialog.getSaveFileName(self, "Создать скрипт", "script.txt", "Text Files (*.txt)",
-                                                   options=options)
-        if file_name:
-            with open(file_name, 'w') as f:
-                f.write(script_text)
-        self.file_name = file_name
-        self.accept()
-        self.file_label.setText(f"Выбран файл: {self.file_name}")
 
-    def get_file_name(self):
-        return self.file_name
+        insert, _ = QInputDialog.getText(self, 'Cохранение скрипта', 'Введите название:')
+
+        data = self.read_config()
+        scripts = data.get('scripts', {})
+        if scripts:
+            scripts.update({insert: script_text})
+        else:
+            scripts = {insert: script_text}
+
+        data['scripts'] = scripts
+        self.write_config(data)
+
+        self.script = script_text
+        self.accept()
+        self.file_label.setText(f"Выбран скрипт: {self.script}")
+
+    def get_script(self):
+        return self.script
+
+    def read_config(self):
+        with open('config.pkl', 'rb') as f:
+            data = pickle.load(f)
+            return data
+
+    def write_config(self, data):
+        with open('config.pkl', 'wb') as f:
+            pickle.dump(data, f)
