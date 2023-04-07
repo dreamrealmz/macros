@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QLabel, QPushButton, QDialog, QVBoxLayout, QFileDialog, QMessageBox, QInputDialog
+from PySide6.QtWidgets import QLabel, QPushButton, QDialog, QVBoxLayout, QComboBox, QMessageBox, QInputDialog
 from keyboard import KeyboardListener
 import pickle
 
@@ -42,12 +42,11 @@ class ScriptDialog(QDialog):
         data = self.read_config()
         scripts = data.get('scripts', {})
         if scripts:
-            insert, _ = QInputDialog.getText(self, 'Выберите скрипт', 'Введите название:')
-            self.script = scripts.get(insert)
-            self.accept()
-            self.file_label.setText(f"Выбран скрипт: {self.script}")
-
-
+            item, ok = QInputDialog.getItem(self, 'Выберите скрипт', 'Выберите скрипт из списка:', scripts.keys(), 0, False)
+            if ok and item:
+                self.script = scripts.get(item)
+                self.accept()
+                self.file_label.setText(f"Выбран скрипт: {self.script}")
         else:
             QMessageBox.information(
                 self,
