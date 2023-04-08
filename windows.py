@@ -1,5 +1,6 @@
 import os
 import sys
+import time  # noqa
 import pickle
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QDialog, QMessageBox, QInputDialog
@@ -8,6 +9,9 @@ from cryptography.fernet import Fernet
 
 from dialogs import ScriptDialog
 from keyboard import KeyboardListener
+from pynput.keyboard import Key, Listener, Controller  # noqa
+from pynput.keyboard._win32 import KeyCode  # noqa
+from buttons import key_class_buttons, keycode_class_buttons, button_comparison
 
 
 class MainWindow(QMainWindow):
@@ -113,14 +117,17 @@ class MainWindow(QMainWindow):
 
     def start_program(self):
         buttons = self.get_buttons_with_macros()
+        scenario = self.write_buttons_scenaries(buttons)
+        print(scenario)
         QMessageBox.information(
             self,
             "Внимание",
             "ПОСЛЕ клика кнопки 'OK' будут запущены макросы, а управление передано клавиатуре. для остановки нажмите f8"
         )
-        listener = KeyboardListener(keyboard_mapping=buttons)
+        # listener = KeyboardListener(keyboard_mapping=buttons)
         self.hide()
-        Process(target=listener.listen_keyboard()).start()
+        exec(scenario)
+        # Process(target=listener.listen_keyboard()).start()
         self.show()
 
     def on_key_pressed(self):
@@ -156,3 +163,64 @@ class MainWindow(QMainWindow):
                     except Exception as exc:
                         pass
         return buttons
+
+    def write_buttons_scenaries(self, buttons):
+        key_buttons = []
+        keycode_buttons = []
+
+        scenario = '''
+class Executor:
+    def __init__(self):
+        self.keyboard = Controller()\n
+'''
+
+
+        for button in buttons:
+            scenario += f'''
+    def {button.text().lower()}(self):
+'''
+            if button.text().lower() in key_class_buttons.keys():
+                key_buttons.append(button)
+            else:
+                keycode_buttons.append(button)
+
+            for command in button.script.split(';'):
+                scenario += f'''
+        {command}
+'''
+        scenario += f'''
+    def on_press(self, key):
+'''
+        if keycode_buttons:
+            scenario += f'''
+        if isinstance(key,KeyCode):
+'''
+            for button in keycode_buttons:
+                scenario += f'''
+            if key.char == {keycode_class_buttons.get(button.text().lower())}:
+                self.{button.text().lower()}()
+'''
+        if key_buttons:
+            scenario += f'''
+        if isinstance(key,Key):
+'''
+            for button in key_buttons:
+                scenario += f'''
+            if key == {key_class_buttons.get(button.text().lower())}:
+                self.{button.text().lower()}()
+'''
+
+        scenario += '''
+    def on_release(self, key):
+        return key != Key.f8
+        
+    def listen(self):
+        with Listener(
+                on_press=self.on_press,
+                on_release=self.on_release) as listener:
+            listener.join()
+            
+a = Executor()
+a.listen()
+    '''
+        return scenario
