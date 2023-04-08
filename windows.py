@@ -2,16 +2,14 @@ import os
 import sys
 import time  # noqa
 import pickle
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QCloseEvent
 from PySide6.QtWidgets import QMainWindow, QLabel, QPushButton, QWidget, QGridLayout, QDialog, QMessageBox, QInputDialog
-from multiprocessing import Process
 from cryptography.fernet import Fernet
-
-from dialogs import ScriptDialog
-from keyboard import KeyboardListener
 from pynput.keyboard import Key, Listener, Controller  # noqa
 from pynput.keyboard._win32 import KeyCode  # noqa
-from buttons import key_class_buttons, keycode_class_buttons, button_comparison
+
+from dialogs import ScriptDialog
+from buttons import key_class_buttons, keycode_class_buttons
 
 
 class MainWindow(QMainWindow):
@@ -118,16 +116,15 @@ class MainWindow(QMainWindow):
     def start_program(self):
         buttons = self.get_buttons_with_macros()
         scenario = self.write_buttons_scenaries(buttons)
-        print(scenario)
+        with open('config.pkl', 'rb') as config:
+            data = pickle.load(config)
         QMessageBox.information(
             self,
             "Внимание",
             "ПОСЛЕ клика кнопки 'OK' будут запущены макросы, а управление передано клавиатуре. для остановки нажмите f8"
         )
-        # listener = KeyboardListener(keyboard_mapping=buttons)
         self.hide()
         exec(scenario)
-        # Process(target=listener.listen_keyboard()).start()
         self.show()
 
     def on_key_pressed(self):
@@ -173,7 +170,6 @@ class Executor:
     def __init__(self):
         self.keyboard = Controller()\n
 '''
-
 
         for button in buttons:
             scenario += f'''
@@ -224,3 +220,33 @@ a = Executor()
 a.listen()
     '''
         return scenario
+
+    def remember_keyboard(self):
+        buttons = self.get_buttons_with_macros()
+        buttons_scripts = {}
+        for button in buttons:
+            buttons_scripts[button.text()] = button.script
+        with open('config.pkl', 'rb') as f:
+            data = pickle.load(f)
+
+        data['last_keyboard'] = buttons_scripts
+        with open('config.pkl', 'wb') as f:
+            pickle.dump(data, f)
+
+    def load_previous_keyboard(self):
+        with open('config.pkl', 'rb') as f:
+            data = pickle.load(f)
+        last_keyboard = data.get('last_keyboard', {})
+
+        buttons_dict = self.get_all_buttons_dict()
+        for key, value in last_keyboard.items():
+            buttons_dict.get(key).script = value
+            buttons_dict.get(key).setStyleSheet('background-color: blue')
+
+    def show(self) -> None:
+        self.load_previous_keyboard()
+        super().show()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self.remember_keyboard()
+        super().closeEvent(event)
