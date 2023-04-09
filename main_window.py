@@ -18,7 +18,6 @@ from base_window import BaseWindow
 class MainWindow(BaseWindow):
     def __init__(self):
         super().__init__()
-
         self.fernet = self.get_secret_key()
         self.keyboard_listener = KeyboardListener()
         self.key_class_buttons = self.keyboard_listener.key_class_buttons
@@ -54,6 +53,16 @@ class MainWindow(BaseWindow):
             ".": "period",
             "/": "forward_slash",
             ",": "comma",
+            "0": "zero",
+            "1": "one",
+            "2": "two",
+            "3": "three",
+            "4": "four",
+            "5": "five",
+            "6": "six",
+            "7": "seven",
+            "8": "eight",
+            "9": "nine"
         }
 
         for row in range(len(buttons)):
@@ -88,7 +97,6 @@ class MainWindow(BaseWindow):
         bottom_layout.addWidget(create_presets_button)
 
         self.keyboard_layout.addWidget(bottom_widget, len(buttons), 0, 1, len(buttons[0]))
-
 
     def create_button_function_name(self, button_text):
         pattern = r'[^\w\s]'
@@ -162,13 +170,11 @@ class MainWindow(BaseWindow):
             'activation_key': insert
         }
         with open('config.pkl', 'wb') as f:
-            pickle.dump(data,f)
-
+            pickle.dump(data, f)
 
     def start_program(self):
         buttons = self.get_buttons_with_macros()
         scenario = self.write_buttons_scenaries(buttons)
-        print(scenario)
         QMessageBox.information(
             self,
             "Внимание",
