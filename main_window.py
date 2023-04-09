@@ -72,6 +72,7 @@ class MainWindow(BaseWindow):
                 button.setStyleSheet('background-color: gray')
                 button.setFixedSize(60, 40)
                 button.func_name = button_funcs_does_not_exist.get(button_label, button_label)
+                print(button.func_name)
                 button.clicked.connect(self.on_key_pressed)
                 self.keyboard_layout.addWidget(button, row, col)
 
@@ -231,6 +232,7 @@ class Executor:
 '''
 
         for button in buttons:
+            print(button.func_name.lower())
             scenario += f'''
     def {button.func_name.lower()}(self):
 '''
@@ -254,7 +256,7 @@ class Executor:
             for button in keycode_buttons:
                 scenario += f'''
             if key.char == {self.keycode_class_buttons.get(button.text().lower())}:
-                self.{button.text().lower()}()
+                self.{button.func_name.lower()}()
 '''
         if key_buttons:
             scenario += f'''
@@ -263,7 +265,7 @@ class Executor:
             for button in key_buttons:
                 scenario += f'''
             if key == {self.key_class_buttons.get(button.text().lower())}:
-                self.{button.text().lower()}()
+                self.{button.func_name.lower()}()
 '''
 
         scenario += '''
