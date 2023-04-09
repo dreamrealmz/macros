@@ -1,4 +1,4 @@
-!define APP_NAME "My Application"
+!define APP_NAME "macros"
 !define APP_VERSION "1.0"
 !define INSTALL_DIR "$PROGRAMFILES\${APP_NAME}"
 
@@ -10,7 +10,7 @@ RequestExecutionLevel admin
 
 Section
     SetOutPath "$INSTDIR"
-    File "main.exe"
+    File "dist\main.exe"
     CreateDirectory "$DESKTOP"
     CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\main.exe" ""
 SectionEnd

@@ -7,6 +7,10 @@ __pycache__/
 env/
 venv/
 ENV/
+build/
+dist/
+*.exe
+*.spec
 .idea
 *.xml
 *.txt
